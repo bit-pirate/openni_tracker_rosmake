@@ -1,4 +1,4 @@
 openni_tracker
 ==============
 
-Custom openni tracker version
+Customised version of the [ROS openni tracker](http://ros.org/wiki/openni_tracker)
