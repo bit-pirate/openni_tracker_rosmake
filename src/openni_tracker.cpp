@@ -16,7 +16,7 @@ using std::string;
 ros::Publisher available_tracked_users_pub;
 ros::Publisher default_user_pub;
 ros::Subscriber user_chooser_sub;
-XnUserID chosen_user;
+XnUserID default_user;
 
 xn::Context g_Context;
 xn::DepthGenerator g_DepthGenerator;
@@ -65,6 +65,11 @@ void XN_CALLBACK_TYPE UserCalibration_CalibrationEnd(xn::SkeletonCapability& cap
     ROS_INFO("Calibration complete, start tracking user %d", nId);
     g_UserGenerator.GetSkeletonCap().StartTracking(nId);
 
+    if (default_user == 0) // set default user if still unset
+    {
+      default_user = nId;
+      ROS_INFO_STREAM("OpenNI tracker: Default user has been initialised with user " << default_user << ".");
+    }
     std_msgs::UInt16MultiArray tracked_users;
     XnUserID users[15];
     XnUInt16 users_count = 15;
@@ -100,12 +105,12 @@ void userChooserCallback(const std_msgs::UInt16ConstPtr& new_default_user)
 {
   if (g_UserGenerator.GetSkeletonCap().IsTracking(new_default_user->data))
   {
-    chosen_user = new_default_user->data;
+    default_user = new_default_user->data;
 
-    std_msgs::UInt16 default_user;
-    default_user.data = chosen_user;
-    default_user_pub.publish(default_user);
-    ROS_INFO_STREAM("OpenNI tracker: Default user is now user " << chosen_user << ".");
+    std_msgs::UInt16 default_user_msg;
+    default_user_msg.data = default_user;
+    default_user_pub.publish(default_user_msg);
+    ROS_INFO_STREAM("OpenNI tracker: Default user is now user " << default_user << ".");
   }
   else
   {
@@ -151,7 +156,7 @@ void publishTransform(XnUserID const& user, XnSkeletonJoint const& joint, string
   transform = change_frame * transform;
 
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), frame_id, child_frame_no));
-  if (user == chosen_user)
+  if (user == default_user)
   {
     br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), frame_id, child_frame_id.c_str()));
   }
@@ -218,7 +223,7 @@ ros::init(argc, argv, "openni_tracker");
 ros::NodeHandle nh, nh_private("~");
 ROS_INFO_STREAM("Initialising OpenNI tracker ...");
 
-chosen_user =  0;
+default_user =  0;
 available_tracked_users_pub = nh_private.advertise<std_msgs::UInt16MultiArray>("available_tracked_users", 10, true);
 default_user_pub = nh_private.advertise<std_msgs::UInt16>("default_user", 10, true);
 user_chooser_sub = nh_private.subscribe("user_chooser", 10, userChooserCallback);
