@@ -224,8 +224,8 @@ ros::NodeHandle nh, nh_private("~");
 ROS_INFO_STREAM("Initialising OpenNI tracker ...");
 
 default_user =  0;
-available_tracked_users_pub = nh_private.advertise<std_msgs::UInt16MultiArray>("available_tracked_users", 10, true);
-default_user_pub = nh_private.advertise<std_msgs::UInt16>("default_user", 10, true);
+available_tracked_users_pub = nh_private.advertise<std_msgs::UInt16MultiArray>("available_users", 10, true);
+default_user_pub = nh_private.advertise<std_msgs::UInt16>("tracked_user", 10, true);
 user_chooser_sub = nh_private.subscribe("user_chooser", 10, userChooserCallback);
 
 string configFilename = ros::package::getPath("openni_tracker") + "/openni_tracker.xml";
